@@ -25,10 +25,8 @@ public class PostServiceImpl implements PostService {
         Optional<Property> property = propertyRepository.findById(postRequest.getPropertyId());
         if (property.isEmpty()) return null;
 
-        //VALIDAR QUE EL USUARIO EXISTA
-
         Property updateProperty = property.get();
-        if (updateProperty.getPosted()) return null;
+        if (updateProperty.getPosted() || !updateProperty.getAvailable()) return null;
 
         updateProperty.setPosted(true);
 

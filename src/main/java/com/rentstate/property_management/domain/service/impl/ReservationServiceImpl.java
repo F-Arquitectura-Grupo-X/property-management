@@ -1,7 +1,10 @@
 package com.rentstate.property_management.domain.service.impl;
 
+import com.rentstate.property_management.application.exceptions.NotFoundException;
+import com.rentstate.property_management.client.UserClient;
 import com.rentstate.property_management.domain.dto.request.ReservationRequest;
 import com.rentstate.property_management.domain.dto.response.ReservationResponse;
+import com.rentstate.property_management.domain.dto.response.UserDTO;
 import com.rentstate.property_management.domain.model.entities.Client;
 import com.rentstate.property_management.domain.model.entities.Property;
 import com.rentstate.property_management.domain.model.entities.Reservation;
@@ -10,6 +13,7 @@ import com.rentstate.property_management.domain.service.ReservationService;
 import com.rentstate.property_management.infrastructure.repository.ClientRepository;
 import com.rentstate.property_management.infrastructure.repository.PropertyRepository;
 import com.rentstate.property_management.infrastructure.repository.ReservationRepository;
+import feign.FeignException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +27,7 @@ public class ReservationServiceImpl implements ReservationService {
     private final ReservationRepository reservationRepository;
     private final PropertyRepository propertyRepository;
     private final ClientRepository clientRepository;
+    private final UserClient userClient;
 
     @Override
     public Boolean addReservation(ReservationRequest reservationRequest) {
@@ -30,21 +35,26 @@ public class ReservationServiceImpl implements ReservationService {
         Optional<Property> property = propertyRepository.findById(reservationRequest.getPropertyId());
         if (property.isEmpty()) return false;
 
-        //VALIDAR SI EL USUARIO EXISTE
+        try {
+            UserDTO user = userClient.getUser(reservationRequest.getUserId());
 
-        Property propertyEntity = property.get();
+            Property propertyEntity = property.get();
 
-        if(isUserAlreadyReserved(propertyEntity, reservationRequest.getUserId())){
-            return false;
+            if(isUserAlreadyReserved(propertyEntity, reservationRequest.getUserId()))
+                return false;
+
+            reservationRequest.setUserName(user.getName() + " "+user.getLastName());
+            Reservation reservation = new Reservation(reservationRequest, propertyEntity);
+            reservationRepository.save(reservation);
+            propertyEntity.getReservations().add(reservation);
+            propertyRepository.save(propertyEntity);
+            return true;
+        } catch (FeignException.NotFound e) {
+            throw new NotFoundException("User with id "+reservationRequest.getUserId()+" not found");
+        } catch (Exception e) {
+            throw new RuntimeException("An unexpected error occurred", e);
         }
 
-
-        Reservation reservation = new Reservation(reservationRequest, propertyEntity);
-        reservationRepository.save(reservation);
-        propertyEntity.getReservations().add(reservation);
-        propertyRepository.save(propertyEntity);
-
-        return true;
     }
 
     @Override

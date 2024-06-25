@@ -1,7 +1,10 @@
 package com.rentstate.property_management.application;
 
+import com.rentstate.property_management.domain.dto.request.CommentRequest;
 import com.rentstate.property_management.domain.dto.request.PostRequest;
+import com.rentstate.property_management.domain.dto.response.CommentResponse;
 import com.rentstate.property_management.domain.dto.response.PostResponse;
+import com.rentstate.property_management.domain.service.CommentService;
 import com.rentstate.property_management.domain.service.PostService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,6 +19,7 @@ import java.util.List;
 public class PostController {
 
     private final PostService postService;
+    private final CommentService commentService;
 
     @PostMapping
     public ResponseEntity<PostResponse> post(@RequestBody PostRequest postRequest) {
@@ -59,6 +63,16 @@ public class PostController {
         }
         return new ResponseEntity<>(postResponse, HttpStatus.OK);
     }
+
+    @PostMapping("/comment")
+    public ResponseEntity<CommentResponse> addComment(@RequestBody CommentRequest commentRequest) {
+        CommentResponse commentResponse = commentService.addComment(commentRequest);
+        if (commentResponse != null) {
+            return ResponseEntity.ok(commentResponse);
+        }
+        return ResponseEntity.badRequest().build();
+    }
+
     @DeleteMapping("/{postId}")
     public ResponseEntity<Boolean> deletePost(@PathVariable Long postId) {
         return new ResponseEntity<>(postService.deletePost(postId),HttpStatus.OK);

@@ -7,7 +7,6 @@ import lombok.Data;
 @Data
 public class PropertyRequest {
 
-
     private String name;
     private String description;
     private String characteristics;
@@ -15,5 +14,6 @@ public class PropertyRequest {
     private Category category;
     private String urlImg;
     private Long ownerId;
+    private Boolean available;
 
 }

@@ -13,14 +13,16 @@ public class PostResponse {
     private Long id;
     private String title;
     private Double price;
+    private String authorName;
     private PropertyResponse property;
     private List<CommentResponse> comments;
 
-    public PostResponse(Post post) {
+    public PostResponse(Post post ) {
         this.id = post.getId();
         this.title = post.getTitle();
         this.price = post.getPrice();
         this.property = new PropertyResponse(post.getProperty());
         this.comments = post.getComments().stream().map(CommentResponse::new).toList();
+        this.authorName = "";
     }
 }

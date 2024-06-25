@@ -1,11 +1,6 @@
 package com.rentstate.property_management.domain.dto.response;
 
 import com.rentstate.property_management.domain.model.entities.Property;
-import com.rentstate.property_management.domain.model.valueObjects.Category;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -23,6 +18,7 @@ public class PropertyResponse {
     private Boolean available;
     private Boolean posted;
     private String urlImg;
+    private Long ownerId;
 
     public PropertyResponse(Property property) {
         id = property.getId();
@@ -34,6 +30,7 @@ public class PropertyResponse {
         available = property.getAvailable();
         posted = property.getPosted();
         urlImg = property.getUrlImg();
+        ownerId = property.getOwnerId();
 
     }
 }

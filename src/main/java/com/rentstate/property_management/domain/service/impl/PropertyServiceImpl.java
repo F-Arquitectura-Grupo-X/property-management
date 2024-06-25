@@ -1,10 +1,14 @@
 package com.rentstate.property_management.domain.service.impl;
 
+import com.rentstate.property_management.application.exceptions.NotFoundException;
+import com.rentstate.property_management.client.UserClient;
 import com.rentstate.property_management.domain.dto.request.PropertyRequest;
 import com.rentstate.property_management.domain.dto.response.PropertyResponse;
+import com.rentstate.property_management.domain.dto.response.UserDTO;
 import com.rentstate.property_management.domain.model.entities.Property;
 import com.rentstate.property_management.domain.service.PropertyService;
 import com.rentstate.property_management.infrastructure.repository.PropertyRepository;
+import feign.FeignException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -14,13 +18,23 @@ import java.util.List;
 @AllArgsConstructor
 public class PropertyServiceImpl implements PropertyService {
     private final PropertyRepository propertyRepository;
+    private final UserClient userClient;
 
     @Override
     public PropertyResponse addProperty(PropertyRequest propertyRequest) {
-        Property property = new Property(propertyRequest);
-        propertyRepository.save(property);
-        return new PropertyResponse(property);
+        try {
+            UserDTO user = userClient.getUser(propertyRequest.getOwnerId());
+
+            Property property = new Property(propertyRequest);
+            propertyRepository.save(property);
+            return new PropertyResponse(property);
+        } catch (FeignException.NotFound e) {
+            throw new NotFoundException("User with id "+propertyRequest.getOwnerId()+" not found");
+        } catch (Exception e) {
+            throw new RuntimeException("An unexpected error occurred", e);
+        }
     }
+
 
     @Override
     public PropertyResponse updateProperty(PropertyRequest propertyRequest, Long propertyId) {
@@ -32,6 +46,7 @@ public class PropertyServiceImpl implements PropertyService {
             property.setLocation(propertyRequest.getLocation());
             property.setCategory(propertyRequest.getCategory());
             property.setUrlImg(property.getUrlImg());
+            property.setAvailable(propertyRequest.getAvailable());
 
             propertyRepository.save(property);
             return new PropertyResponse(property);
